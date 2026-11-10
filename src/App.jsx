@@ -53,9 +53,6 @@ export default function App() {
   const [isTimeslotModalOpen, setIsTimeslotModalOpen] = useState(false);
   const [activeOrder, setActiveOrder] = useState(null);
 
-  // View mode: Toggle phone frame vs full webapp
-  const [isMobileView, setIsMobileView] = useState(false);
-
   // Cart Handlers
   const handleAddToCart = (itemToAdd) => {
     setCartItems(prev => {
@@ -131,8 +128,7 @@ export default function App() {
 
   const cartTotalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Core App UI Body
-  const renderAppContent = () => (
+  return (
     <div className="min-h-screen bg-slate-100 flex flex-col justify-between">
       <div>
         {/* Navigation Header */}
@@ -383,46 +379,10 @@ export default function App() {
 
       {/* Floating Demo Control Bar */}
       <DemoToolbar
-        isMobileView={isMobileView}
-        onToggleMobileView={() => setIsMobileView(!isMobileView)}
         onQuickLoadDemoOrder={handleQuickLoadDemoOrder}
         onNavigate={(tab) => setActiveTab(tab)}
         activeTab={activeTab}
       />
     </div>
   );
-
-  // If in Phone Mockup Preview Mode, wrap in realistic iPhone frame
-  if (isMobileView) {
-    return (
-      <div className="min-h-screen bg-slate-900 py-8 px-4 flex flex-col items-center justify-center">
-        {/* Device Wrapper Header */}
-        <div className="text-center mb-4 text-white">
-          <div className="inline-flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-full text-xs font-semibold text-amber-300 border border-slate-700">
-            <span>📱 Mobile App View Mode (Ready for Capacitor / App Store)</span>
-          </div>
-        </div>
-
-        {/* Realistic iPhone Phone Mockup Shell */}
-        <div className="relative w-full max-w-[410px] h-[850px] bg-black rounded-[52px] p-3.5 shadow-2xl ring-1 ring-slate-700 overflow-hidden border-4 border-slate-800">
-          {/* Dynamic Island Notch */}
-          <div className="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-40 flex items-center justify-between px-2.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-slate-900 border border-slate-800" />
-            <div className="w-2 h-2 rounded-full bg-emerald-500/80" />
-          </div>
-
-          {/* Inner Phone Screen */}
-          <div className="w-full h-full bg-white rounded-[40px] overflow-y-auto overflow-x-hidden relative no-scrollbar">
-            {renderAppContent()}
-          </div>
-
-          {/* Home Indicator Bar */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full z-40" />
-        </div>
-      </div>
-    );
-  }
-
-  // Normal Fullscreen Webapp
-  return renderAppContent();
 }

@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
-import { Smartphone, Monitor, Sparkles, BookOpen, ChevronUp, ChevronDown, Check, HelpCircle } from 'lucide-react';
+import { Sparkles, BookOpen } from 'lucide-react';
 
 export default function DemoToolbar({ 
-  isMobileView, 
-  onToggleMobileView, 
   onQuickLoadDemoOrder, 
   onNavigate,
   activeTab
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showPitchNotes, setShowPitchNotes] = useState(false);
 
   return (
@@ -19,20 +16,6 @@ export default function DemoToolbar({
         className="fixed bottom-20 sm:bottom-6 right-4 z-40 bg-slate-900/90 backdrop-blur-md text-white border border-slate-700/80 rounded-2xl shadow-2xl p-2.5 transition-all text-xs"
       >
         <div className="flex items-center gap-2">
-          {/* Mobile frame toggle */}
-          <button
-            onClick={onToggleMobileView}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
-              isMobileView 
-                ? 'bg-amber-500 text-slate-950 shadow-xs' 
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
-            }`}
-            title="Toggle smartphone mockup view"
-          >
-            {isMobileView ? <Smartphone className="w-3.5 h-3.5" /> : <Monitor className="w-3.5 h-3.5" />}
-            <span className="hidden xs:inline">{isMobileView ? 'Phone Frame' : 'Web View'}</span>
-          </button>
-
           {/* Quick Preset Order */}
           <button
             onClick={onQuickLoadDemoOrder}
