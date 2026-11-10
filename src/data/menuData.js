@@ -226,17 +226,17 @@ export const SIDEBOARD_UPSELL_ITEMS = [
   },
   {
     id: 'sb-drink-2',
-    name: 'Fritz-Kola Super-Zero (0.33L)',
-    subtitle: 'Sugar-free with natural caffeine',
+    name: 'Fritz-Kola Original (0.33L Glass Bottle)',
+    subtitle: 'Vielviel Koffein • Hamburg Classic',
     type: 'drink',
     isVegan: true,
     isVeggie: true,
     isGlutenFree: true,
     price: 1.80,
     prepTime: 'Chilled in Ape Fridge',
-    tag: 'Zero Sugar',
-    description: 'Crisp, high-caffeine German craft cola. Ice cold from the side chiller.',
-    image: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80',
+    tag: 'High Caffeine',
+    description: 'Ice-cold original Fritz-Kola with real cola nut extract and extra caffeine. Crown-capped glass bottle straight from the side chiller.',
+    image: '/fritz-kola.jpg',
     temperature: 'Chilled 4°C'
   },
   {
