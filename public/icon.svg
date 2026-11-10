@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="128" fill="#F59E0B"/>
+  <!-- Inner circular badge -->
+  <circle cx="256" cy="256" r="210" fill="#FEF3C7" stroke="#D97706" stroke-width="12"/>
+  <!-- Cute Ape Vector -->
+  <!-- Cargo box -->
+  <rect x="100" y="190" width="200" height="150" rx="16" fill="#F59E0B" stroke="#B45309" stroke-width="10"/>
+  <!-- Awning stripes -->
+  <path d="M90 190 L310 190 L320 150 L80 150 Z" fill="#DC2626"/>
+  <path d="M110 150 L120 190 L150 190 L140 150 Z" fill="#FFFFFF"/>
+  <path d="M180 150 L190 190 L220 190 L210 150 Z" fill="#FFFFFF"/>
+  <path d="M250 150 L260 190 L290 190 L280 150 Z" fill="#FFFFFF"/>
+  <!-- Cabin front -->
+  <path d="M300 200 L370 200 Q410 200 420 240 L430 310 Q435 330 410 340 L300 340 Z" fill="#F59E0B" stroke="#B45309" stroke-width="10"/>
+  <!-- Windshield -->
+  <path d="M315 215 L375 215 Q400 215 408 245 L415 280 L315 280 Z" fill="#BAE6FD" stroke="#0284C7" stroke-width="6"/>
+  <!-- Headlight -->
+  <circle cx="435" cy="300" r="18" fill="#FEF08A" stroke="#D97706" stroke-width="6"/>
+  <!-- Front wheel -->
+  <circle cx="410" cy="365" r="34" fill="#1E293B" stroke="#475569" stroke-width="8"/>
+  <circle cx="410" cy="365" r="14" fill="#CBD5E1"/>
+  <!-- Rear wheel -->
+  <circle cx="170" cy="365" r="36" fill="#1E293B" stroke="#475569" stroke-width="8"/>
+  <circle cx="170" cy="365" r="15" fill="#CBD5E1"/>
+  <!-- Steaming coffee cup icon in cargo -->
+  <rect x="145" y="235" width="45" height="35" rx="6" fill="#78350F"/>
+  <path d="M190 245 Q205 245 205 255 Q205 265 190 265" stroke="#78350F" stroke-width="5" fill="none"/>
+  <path d="M155 225 Q150 215 158 205" stroke="#92400E" stroke-width="4" stroke-linecap="round" fill="none"/>
+  <path d="M170 225 Q165 215 173 205" stroke="#92400E" stroke-width="4" stroke-linecap="round" fill="none"/>
+</svg>

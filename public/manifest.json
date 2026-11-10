@@ -1,0 +1,18 @@
+{
+  "name": "Ape-solutely: Mensa Shuttle @ ADL",
+  "short_name": "Ape-solutely",
+  "description": "Pre-order Mensa break meals delivered hot directly to the ADL entrance by Piaggio Ape shuttle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#F59E0B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

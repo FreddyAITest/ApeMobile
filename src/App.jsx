@@ -148,7 +148,7 @@ export default function App() {
 
         {/* --- TAB 1: PRE-ORDER (HOME / MENSA MENU) --- */}
         {activeTab === 'home' && (
-          <main className="max-w-5xl mx-auto px-4 py-5 pb-24">
+          <main className="max-w-5xl mx-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
             {/* Timeslot Selector Banner */}
             <TimeslotSelector
               selectedSlot={selectedSlot}
@@ -235,7 +235,7 @@ export default function App() {
 
         {/* --- TAB 2: DEDICATED SIDEBOARD VIEW --- */}
         {activeTab === 'sideboard' && (
-          <main className="max-w-5xl mx-auto px-4 py-5 pb-24">
+          <main className="max-w-5xl mx-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
             <SideboardUpsell
               onAddToCart={(item) => handleAddToCart(item)}
               cartItems={cartItems}
@@ -265,7 +265,7 @@ export default function App() {
 
         {/* --- TAB 3: LIVE TRACKER MAP --- */}
         {activeTab === 'tracker' && (
-          <main className="py-4 pb-24">
+          <main className="py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
             <LiveTracker
               activeOrder={activeOrder}
               onBackToMenu={() => setActiveTab('home')}
@@ -275,7 +275,7 @@ export default function App() {
 
         {/* --- TAB 4: SETTINGS / ACCOUNT --- */}
         {activeTab === 'account' && (
-          <main className="py-4 pb-24">
+          <main className="py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
             <AccountSettings
               user={user}
               onUpdateUser={(updated) => setUser(updated)}
@@ -288,7 +288,7 @@ export default function App() {
       {/* --- BOTTOM MOBILE-FIRST TAB BAR --- */}
       <nav 
         aria-label="Main Navigation"
-        className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 py-2 px-4 shadow-lg"
+        className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] px-4 shadow-lg"
       >
         <div className="max-w-md mx-auto flex items-center justify-around">
           {[
