@@ -1,388 +1,315 @@
 import React, { useState } from 'react';
-import { 
-  Utensils, 
-  Coffee, 
-  Navigation, 
-  User, 
-  Clock, 
-  MapPin, 
-  Sparkles, 
-  Leaf, 
-  ShieldCheck, 
-  Search, 
-  ChevronRight,
-  Filter,
-  Flame
-} from 'lucide-react';
-
-import { TIMESLOTS, CATEGORIES, MENSA_ITEMS, SIDEBOARD_UPSELL_ITEMS, MOCK_USER } from './data/menuData';
+import { QrCode, ChevronRight } from 'lucide-react';
 import Header from './components/Header';
 import TimeslotSelector from './components/TimeslotSelector';
 import MenuCard from './components/MenuCard';
-import SideboardUpsell from './components/SideboardUpsell';
+import SideboardSection from './components/SideboardSection';
 import ItemModal from './components/ItemModal';
 import CartDrawer from './components/CartDrawer';
-import LiveTracker from './components/LiveTracker';
-import AccountSettings from './components/AccountSettings';
-import DemoToolbar from './components/DemoToolbar';
-import ApeIllustration from './components/ApeIllustration';
+import CheckoutModal from './components/CheckoutModal';
+import OrderConfirmation from './components/OrderConfirmation';
+import { CATEGORIES, MENSA_ITEMS, SIDEBOARD_ITEMS, TIMESLOTS } from './data/menuData';
+
+const STORAGE_KEY = 'ape-solutely-active-order';
+
+function readStoredPickup() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function App() {
-  // Navigation State: 'home' | 'sideboard' | 'tracker' | 'account'
-  const [activeTab, setActiveTab] = useState('home');
-
-  // Core Data States
   const [selectedSlot, setSelectedSlot] = useState(TIMESLOTS[0]);
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [user, setUser] = useState(MOCK_USER);
-
-  // Cart & Orders State
-  const [cartItems, setCartItems] = useState([
-    // Start with 1 item for immediate delight
-    {
-      ...MENSA_ITEMS[0],
-      quantity: 1,
-      unitPrice: MENSA_ITEMS[0].prices.student,
-      selectedAddons: [],
-      reusableContainer: false
-    }
-  ]);
+  const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [selectedModalItem, setSelectedModalItem] = useState(null);
-  const [isTimeslotModalOpen, setIsTimeslotModalOpen] = useState(false);
-  const [activeOrder, setActiveOrder] = useState(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
+  const [activePickup, setActivePickup] = useState(readStoredPickup);
 
-  // Cart Handlers
-  const handleAddToCart = (itemToAdd) => {
+  const matchesCategory = item => {
+    if (selectedCategory === 'vegan') return item.isVegan;
+    if (selectedCategory === 'veggie') return item.isVeggie;
+    if (selectedCategory === 'glutenfree') return item.isGlutenFree;
+    return true;
+  };
+
+  const dishes = MENSA_ITEMS.filter(matchesCategory);
+  const sideboard = SIDEBOARD_ITEMS.filter(matchesCategory);
+  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleAddToCart = (item, quantity = 1) => {
     setCartItems(prev => {
-      const existingIndex = prev.findIndex(item => 
-        item.id === itemToAdd.id && 
-        JSON.stringify(item.selectedAddons || []) === JSON.stringify(itemToAdd.selectedAddons || [])
-      );
+      const existing = prev.find(entry => entry.id === item.id);
 
-      if (existingIndex > -1) {
-        const updated = [...prev];
-        updated[existingIndex].quantity += (itemToAdd.quantity || 1);
-        return updated;
-      } else {
-        return [...prev, { ...itemToAdd, quantity: itemToAdd.quantity || 1 }];
+      if (existing) {
+        return prev.map(entry =>
+          entry.id === item.id
+            ? { ...entry, quantity: entry.quantity + quantity }
+            : entry
+        );
       }
+
+      return [...prev, { ...item, quantity }];
     });
   };
 
-  const handleUpdateQuantity = (id, newQty) => {
-    if (newQty <= 0) {
+  const handleUpdateQuantity = (id, quantity) => {
+    if (quantity <= 0) {
       handleRemoveItem(id);
-    } else {
-      setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity: newQty } : item));
+      return;
     }
+
+    setCartItems(prev =>
+      prev.map(item => (item.id === id ? { ...item, quantity } : item))
+    );
   };
 
-  const handleRemoveItem = (id) => {
+  const handleRemoveItem = id => {
     setCartItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleOrderSuccess = (newOrder) => {
-    setActiveOrder(newOrder);
+  const handleOpenCheckout = () => {
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleConfirmOrder = ({ name, paymentMethod }) => {
+    const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const id = `APE-${Math.floor(1000 + Math.random() * 9000)}`;
+    const pickupCode = String(Math.floor(1000 + Math.random() * 9000));
+    const token =
+      globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
+    const compartment = ['A1', 'A2', 'B1', 'B3'][Math.floor(Math.random() * 4)];
+
+    const order = {
+      id,
+      items: cartItems,
+      total,
+      slot: selectedSlot,
+      customerName: name,
+      paymentMethod,
+      pickupCode,
+      compartment,
+      qrPayload: `https://ape-solutely.example/pickup/${id}?code=${pickupCode}&token=${token}`
+    };
+
+    setConfirmedOrder(order);
+    setActivePickup(order);
     setCartItems([]);
-    setActiveTab('tracker'); // Seamlessly direct to live tracker map!
+    setIsCheckoutOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(order));
+    } catch {
+      // Storage can be unavailable in private mode; the flow still works.
+    }
   };
 
-  const handleReorder = (pastOrder) => {
-    // Add items from past order
-    const sampleItem = MENSA_ITEMS[0];
-    const sampleDrink = SIDEBOARD_UPSELL_ITEMS[0];
-    setCartItems([
-      { ...sampleItem, quantity: 1, unitPrice: sampleItem.prices[user.tier] },
-      { ...sampleDrink, quantity: 1, unitPrice: sampleDrink.price }
-    ]);
-    setIsCartOpen(true);
+  const handleBackToMenu = () => {
+    setConfirmedOrder(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleQuickLoadDemoOrder = () => {
-    setCartItems([
-      { ...MENSA_ITEMS[1], quantity: 1, unitPrice: MENSA_ITEMS[1].prices[user.tier] }, // ADL Quinoa Bowl
-      { ...SIDEBOARD_UPSELL_ITEMS[0], quantity: 1, unitPrice: SIDEBOARD_UPSELL_ITEMS[0].price }, // Oat Flat White
-      { ...SIDEBOARD_UPSELL_ITEMS[4], quantity: 1, unitPrice: SIDEBOARD_UPSELL_ITEMS[4].price }  // Salted Caramel Brownie
-    ]);
-    setIsCartOpen(true);
+  const handleShowPickup = () => {
+    if (!activePickup) return;
+    setConfirmedOrder(activePickup);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Filtered dishes
-  const filteredDishes = MENSA_ITEMS.filter(dish => {
-    // Search match
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const matchName = dish.name.toLowerCase().includes(query);
-      const matchDesc = dish.description.toLowerCase().includes(query);
-      if (!matchName && !matchDesc) return false;
+  const handleClearPickup = () => {
+    setActivePickup(null);
+    setConfirmedOrder(null);
+
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // Ignore storage errors.
     }
 
-    // Category match
-    if (selectedCategory === 'vegan') return dish.isVegan;
-    if (selectedCategory === 'veggie') return dish.isVeggie;
-    if (selectedCategory === 'glutenfree') return dish.isGlutenFree;
-    return true;
-  });
-
-  const cartTotalCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-between">
-      <div>
-        {/* Navigation Header */}
-        <Header
-          selectedSlot={selectedSlot}
-          onOpenTimeslots={() => setIsTimeslotModalOpen(true)}
-          cartCount={cartTotalCount}
-          onOpenCart={() => setIsCartOpen(true)}
-          user={user}
-          activeTab={activeTab}
-          onNavigate={(tab) => setActiveTab(tab)}
-        />
+    <div className="flex min-h-screen flex-col bg-[#FAFAF8] text-slate-900">
+      <Header cartCount={cartCount} onOpenCart={() => setIsCartOpen(true)} />
 
-        {/* --- TAB 1: PRE-ORDER (HOME / MENSA MENU) --- */}
-        {activeTab === 'home' && (
-          <main className="max-w-5xl mx-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-            {/* Timeslot Selector Banner */}
+      {confirmedOrder ? (
+        <OrderConfirmation
+          order={confirmedOrder}
+          onBack={handleBackToMenu}
+          onClear={handleClearPickup}
+        />
+      ) : (
+        <main className="mx-auto w-full max-w-4xl px-4 pb-20 sm:px-6">
+          {activePickup && (
+            <button
+              type="button"
+              onClick={handleShowPickup}
+              className="mt-6 flex w-full items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-left transition-colors hover:bg-amber-100/70"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700">
+                <QrCode className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-bold text-slate-900">
+                  Pickup reserved
+                </p>
+                <p className="truncate text-[10px] text-amber-800">
+                  {activePickup.slot.window} · {activePickup.id}
+                </p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-amber-700" />
+            </button>
+          )}
+
+          <section className="pb-8 pt-10 sm:pb-10 sm:pt-14">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-800">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              Mensa shuttle for the Agile Design Lab
+            </span>
+
+            <h1 className="mt-4 max-w-xl text-3xl font-black leading-[1.1] tracking-tight sm:text-4xl">
+              Lunch, right at your break.
+            </h1>
+
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600">
+              Pre-order a Mensa dish, coffee or treat. The Ape parks at the ADL
+              entrance and hands it over — hot, chilled or sealed.
+            </p>
+
+            <div className="mt-4 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
+              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1">
+                Pickup at the ADL door
+              </span>
+              <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1">
+                Vegan & gluten-free options
+              </span>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-5">
             <TimeslotSelector
               selectedSlot={selectedSlot}
-              onSelectSlot={(slot) => setSelectedSlot(slot)}
-              variant="banner"
+              onSelectSlot={setSelectedSlot}
             />
+          </section>
 
-            {/* --- UPSELL STATION: THE APE SIDEBOARD --- */}
-            {/* Requested: "In addition we want to add on one side of the ape a 'upsell' part in which we are adding dessert and drinks" */}
-            <SideboardUpsell
-              onAddToCart={(item) => handleAddToCart(item)}
-              cartItems={cartItems}
-            />
+          <section className="pt-10">
+            <div>
+              <h2 className="text-xl font-black tracking-tight">Today's menu</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Student prices · fresh from the Mensa kitchen
+              </p>
+            </div>
 
-            {/* --- MENSA MAIN COURSES SECTION --- */}
-            <section className="mt-8">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <Utensils className="w-5 h-5 text-amber-600" />
-                    <span>2. Choose Your Mensa Dish</span>
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Freshly cooked at central Mensa • Transported to ADL in thermo-boxes (72°C)
-                  </p>
-                </div>
+            <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
+              {CATEGORIES.map(category => {
+                const isActive = selectedCategory === category.id;
 
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Mensa meals..."
-                    className="pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 bg-white text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 w-full sm:w-56 shadow-2xs"
-                  />
-                </div>
-              </div>
-
-              {/* Category Filter Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 mb-4">
-                {CATEGORIES.filter(c => c.id !== 'sideboard').map(cat => (
+                return (
                   <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                      selectedCategory === cat.id
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                    key={category.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(category.id)}
+                    aria-pressed={isActive}
+                    className={`whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                      isActive
+                        ? 'bg-slate-900 text-white'
+                        : 'border border-stone-200 bg-white text-slate-600 hover:border-stone-300'
                     }`}
                   >
-                    {cat.name}
+                    {category.name}
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
 
-              {/* Dishes Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredDishes.map(dish => {
-                  const inCartItem = cartItems.find(i => i.id === dish.id);
-                  const qty = inCartItem ? inCartItem.quantity : 0;
-
-                  return (
+            {dishes.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-sm font-extrabold tracking-tight">Mensa dishes</h3>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  {dishes.map(dish => (
                     <MenuCard
                       key={dish.id}
                       item={dish}
-                      userTier={user.tier}
-                      userDietaryLocks={user.dietaryLocks}
-                      cartQuantity={qty}
-                      onSelectItem={(item) => setSelectedModalItem(item)}
-                      onQuickAdd={(item) => handleAddToCart({
-                        ...item,
-                        quantity: 1,
-                        unitPrice: item.prices[user.tier]
-                      })}
+                      onSelect={setSelectedItem}
+                      onAdd={item => handleAddToCart(item)}
                     />
-                  );
-                })}
-              </div>
-            </section>
-          </main>
-        )}
-
-        {/* --- TAB 2: DEDICATED SIDEBOARD VIEW --- */}
-        {activeTab === 'sideboard' && (
-          <main className="max-w-5xl mx-auto px-4 py-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-            <SideboardUpsell
-              onAddToCart={(item) => handleAddToCart(item)}
-              cartItems={cartItems}
-            />
-
-            {/* Sideboard Context Callout */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm mt-6">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center">
-                  <Coffee className="w-6 h-6 text-amber-700" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-slate-900 text-base">
-                    Why the Ape Sideboard?
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Designed for fast 15-min breaks at the Agile Design Lab
-                  </p>
+                  ))}
                 </div>
               </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                4 out of 5 students at the ADL rely on coffee to stay focused, but there is no café nearby. When the Ape arrives with your pre-ordered hot meals, the left hatch opens to serve fresh barista espresso with Oatly oat milk, ice-cold Club-Mate, and certified gluten-free pastries right on site.
-              </p>
-            </div>
-          </main>
-        )}
+            )}
 
-        {/* --- TAB 3: LIVE TRACKER MAP --- */}
-        {activeTab === 'tracker' && (
-          <main className="py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-            <LiveTracker
-              activeOrder={activeOrder}
-              onBackToMenu={() => setActiveTab('home')}
-            />
-          </main>
-        )}
-
-        {/* --- TAB 4: SETTINGS / ACCOUNT --- */}
-        {activeTab === 'account' && (
-          <main className="py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
-            <AccountSettings
-              user={user}
-              onUpdateUser={(updated) => setUser(updated)}
-              onReorder={handleReorder}
-            />
-          </main>
-        )}
-      </div>
-
-      {/* --- BOTTOM MOBILE-FIRST TAB BAR --- */}
-      <nav 
-        aria-label="Main Navigation"
-        className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200/90 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] px-4 shadow-lg"
-      >
-        <div className="max-w-md mx-auto flex items-center justify-around">
-          {[
-            { id: 'home', label: 'Pre-Order', icon: Utensils },
-            { id: 'sideboard', label: 'Ape Sideboard', icon: Coffee },
-            { id: 'tracker', label: 'Ape Tracker', icon: Navigation, badge: activeOrder ? 'Live' : null },
-            { id: 'account', label: 'Account', icon: User },
-          ].map(tab => {
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex flex-col items-center gap-1 py-1 px-3 rounded-2xl transition-all cursor-pointer ${
-                  isActive
-                    ? 'text-amber-600 font-extrabold'
-                    : 'text-slate-500 hover:text-slate-800 font-medium'
-                }`}
-              >
-                <div className="relative">
-                  <tab.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-                  {tab.badge && (
-                    <span className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  )}
+            {sideboard.length > 0 && (
+              <div className="mt-10">
+                <h3 className="text-sm font-extrabold tracking-tight">Coffee & treats</h3>
+                <p className="mt-1 text-xs text-slate-500">From the Ape sideboard</p>
+                <div className="mt-3">
+                  <SideboardSection
+                    items={sideboard}
+                    onSelect={setSelectedItem}
+                    onAdd={item => handleAddToCart(item)}
+                  />
                 </div>
-                <span className="text-[11px] tracking-tight">{tab.label}</span>
-                {isActive && (
-                  <span className="absolute bottom-0 w-8 h-1 bg-amber-500 rounded-full" />
-                )}
-              </button>
-            );
-          })}
+              </div>
+            )}
+
+            {dishes.length === 0 && sideboard.length === 0 && (
+              <div className="mt-8 rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
+                <p className="text-sm font-bold text-slate-800">Nothing matches this filter.</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  className="mt-2 text-xs font-semibold text-amber-700 hover:underline"
+                >
+                  Show all items
+                </button>
+              </div>
+            )}
+          </section>
+        </main>
+      )}
+
+      <footer className="mt-auto border-t border-stone-200/80">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-1.5 px-4 py-6 text-[11px] text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span>Ape-solutely · Mensa shuttle for the Agile Design Lab</span>
+          <span>Prototype · Allergen information is indicative. Please ask on site.</span>
         </div>
-      </nav>
+      </footer>
 
-      {/* Modals & Drawers */}
-      {selectedModalItem && (
+      {selectedItem && (
         <ItemModal
-          item={selectedModalItem}
-          userTier={user.tier}
-          onClose={() => setSelectedModalItem(null)}
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
           onAddToCart={handleAddToCart}
         />
       )}
 
-      {/* Cart Drawer */}
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cartItems={cartItems}
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
-        onAddToCart={handleAddToCart}
         selectedSlot={selectedSlot}
-        user={user}
-        onOrderSuccess={handleOrderSuccess}
+        onSelectSlot={setSelectedSlot}
+        onCheckout={handleOpenCheckout}
       />
 
-      {/* Timeslot Quick-Select Modal */}
-      {isTimeslotModalOpen && (
-        <div
-          onClick={() => setIsTimeslotModalOpen(false)}
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4"
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-200"
-          >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <h3 className="font-extrabold text-slate-900 text-base">
-                Switch Break Timeslot
-              </h3>
-              <button
-                onClick={() => setIsTimeslotModalOpen(false)}
-                className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold"
-              >
-                ✕
-              </button>
-            </div>
-            <TimeslotSelector
-              selectedSlot={selectedSlot}
-              onSelectSlot={(slot) => {
-                setSelectedSlot(slot);
-                setIsTimeslotModalOpen(false);
-              }}
-              variant="modal"
-            />
-          </div>
-        </div>
+      {isCheckoutOpen && (
+        <CheckoutModal
+          cartItems={cartItems}
+          selectedSlot={selectedSlot}
+          onClose={() => setIsCheckoutOpen(false)}
+          onConfirm={handleConfirmOrder}
+        />
       )}
-
-      {/* Floating Demo Control Bar */}
-      <DemoToolbar
-        onQuickLoadDemoOrder={handleQuickLoadDemoOrder}
-        onNavigate={(tab) => setActiveTab(tab)}
-        activeTab={activeTab}
-      />
     </div>
   );
 }

@@ -1,61 +1,66 @@
-# Ape-solutely • Mensa Break Stand @ ADL
+# Ape-solutely · Mensa shuttle for the Agile Design Lab
 
-An interactive mobile-first prototype for the **Ape-solutely** Mensa pre-order shuttle service designed for students and faculty at the **Agile Design Lab (ADL)**.
+An interactive, mobile-first prototype of **Ape-solutely**, a Mensa pre-order
+shuttle for students and faculty at the **Agile Design Lab (ADL)**.
 
-Live Demo: [https://ape-solutely-mensa.netlify.app](https://ape-solutely-mensa.netlify.app)
+Stakeholders scan a QR code, browse what the Ape offers and can run through the
+whole pre-order flow — including a demo checkout and a generated pickup QR code.
+
+Live demo: [https://ape-solutely-mensa.netlify.app](https://ape-solutely-mensa.netlify.app)
 
 ---
 
-## 🚀 Quick Start
+## Quick start
 
-Ensure you have **Node.js** (v18+) installed.
+Requires **Node.js 18+**.
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Start local development server
 npm run dev
-
-# 3. Open in browser
 # http://localhost:5173/
 ```
 
-### Production Build
+Production build:
+
 ```bash
 npm run build
-# Built files are generated in ./dist
+# output in ./dist
 ```
 
 ---
 
-## 🛵 Key Features
+## What's in the prototype
 
-1. **🕒 Break Timeslot Pre-Order (12:00 – 14:00)**:
-   - Break 1 (12:00 – 12:25)
-   - Break 2 (13:00 – 13:25)
-   - Break 3 (13:45 – 14:10)
-   - Real-time cut-off countdowns and capacity limits.
+1. **Menu overview**
+   - Five Mensa dishes plus coffee, cold drinks and treats from the Ape sideboard.
+   - Clear vegan, vegetarian and gluten-free badges.
+   - Allergen information on every item and in the item details.
 
-2. **☕ The Ape Sideboard (Upsell Station)**:
-   - Left-side hatch of the Piaggio Ape featuring fresh barista espresso & oat milk flat whites, chilled Berlin Club-Mate (0.5L) & Fritz-Kola, and certified sealed vegan/GF treats.
-   - Combo deal: Add coffee + sweet to save €1.00.
+2. **Break timeslot**
+   - Break 1 (12:00), Break 2 (13:00) and Break 3 (13:45) with order cut-offs.
 
-3. **🗺️ Live Campus GPS Tracker (Lieferando / UberEats style)**:
-   - Interactive vector campus map following the route from Central Mensa to the ADL entrance.
-   - Animated Piaggio Ape vehicle, ETA countdown, and 4-step progress stepper.
-   - Contactless pickup PIN (`#4288`) and scannable QR code for rapid ≤ 5 min break turnaround.
+3. **Demo checkout**
+   - Add items, adjust quantities, pick a timeslot.
+   - Enter a pickup name and choose MensaCard, Apple Pay or card.
+   - No real payment is taken; the flow is simulated.
 
-4. **💳 Student Profile & MensaCard**:
-   - Digital MensaCard balance top-up simulation.
-   - Subsidized pricing tier toggles (Student, Staff, Guest).
-   - Strict dietary locks (Vegan, Coeliac/Gluten-Free, Lactose-Free).
-   - Digital receipts and 1-click reorder.
+4. **Pickup confirmation**
+   - Randomly generated order number, PIN and heated box.
+   - A locally generated QR code that can be saved and shown at the Ape.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech stack
+
 - **Framework:** React 19 + Vite
 - **Styling:** Tailwind CSS + Lucide Icons
-- **PWA / Mobile:** iOS standalone web app support with safe-area insets and manifest
+- **QR code:** `qrcode`
+- **PWA / mobile:** iOS standalone web app support with safe-area insets and manifest
 - **Deployment:** Netlify (`netlify.toml` included)
+
+---
+
+## Notes
+
+This is an early prototype. Allergen information is indicative, and the pickup
+QR code does not unlock a real box.
